@@ -112,10 +112,10 @@
       padding: 28px;
       text-align: center;
       background-color: #0b111a;
-      background-image: url('./camera-backgrounds.png');
+      background-image: var(--camera-image);
       background-repeat: no-repeat;
-      background-size: 500% auto;
-      background-position: calc(var(--col) * 25%) var(--row-position);
+      background-size: cover;
+      background-position: center;
     }
     .camera-placeholder strong { font-size: 22px; }
     .camera-placeholder small { color: #b9c9db; font-size: 13px; }
@@ -454,8 +454,7 @@
 
       const preview = document.createElement('div');
       preview.className = 'camera-placeholder';
-      preview.style.setProperty('--col', index % 5);
-      preview.style.setProperty('--row-position', ['5.5%', '46.3%', '86.8%'][Math.floor(index / 5)]);
+      preview.style.setProperty('--camera-image', `url('./camera-${number}.jpg')`);
 
       const link = document.createElement('a');
       link.className = 'camera-link';
