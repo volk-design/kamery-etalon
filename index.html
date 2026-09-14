@@ -111,7 +111,11 @@
       gap: 8px;
       padding: 28px;
       text-align: center;
-      background: radial-gradient(circle at 50% 35%, #263a54 0, #152235 42%, #0b111a 100%);
+      background-color: #0b111a;
+      background-image: url('./camera-backgrounds.png');
+      background-repeat: no-repeat;
+      background-size: 500% auto;
+      background-position: calc(var(--col) * 25%) var(--row-position);
     }
     .camera-placeholder strong { font-size: 22px; }
     .camera-placeholder small { color: #b9c9db; font-size: 13px; }
@@ -443,14 +447,15 @@
 
     updateVisitCounter().catch(() => {});
 
-    cameras.forEach(number => {
+    cameras.forEach((number, index) => {
       const url = 'https://etalongroup.ru/msk/online/';
       const card = document.createElement('section');
       card.className = 'camera';
 
       const preview = document.createElement('div');
       preview.className = 'camera-placeholder';
-      preview.innerHTML = `<strong>Камера ${number}</strong><small>Открыть официальную трансляцию ЭТАЛОН</small>`;
+      preview.style.setProperty('--col', index % 5);
+      preview.style.setProperty('--row-position', ['6.2%', '53%', '100%'][Math.floor(index / 5)]);
 
       const link = document.createElement('a');
       link.className = 'camera-link';
