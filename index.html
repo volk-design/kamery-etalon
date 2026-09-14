@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23101722'/%3E%3Cpath d='M14 22h10l4-6h12l4 6h6a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6Z' fill='%233b82f6'/%3E%3Ccircle cx='32' cy='37' r='10' fill='%23fff'/%3E%3Ccircle cx='32' cy='37' r='6' fill='%23101722'/%3E%3C/svg%3E">
+  <title>Камеры ЗИЛ</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      display: grid;
+      grid-template-rows: 44px minmax(0, 1fr);
+      overflow: hidden;
+      color: #fff;
+      background: #090d13;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 14px;
+      border-bottom: 1px solid #344258;
+      background: #101722;
+    }
+    h1 {
+      flex: 0 0 auto;
+      margin: 0;
+      font-size: 17px;
+      white-space: nowrap;
+    }
+    .summary {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex: 1 1 auto;
+    }
+    .summary a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 0 13px;
+      border-left: 1px solid #344258;
+      color: #e8edf4;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .summary a:first-child { border-left: 0; }
+    .summary a:hover,
+    .summary a:focus-visible {
+      background: #202e42;
+      outline: none;
+    }
+    .summary .dot {
+      flex: 0 0 auto;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #778292;
+      box-shadow: 0 0 6px currentColor;
+    }
+    .summary .value {
+      font-size: 15px;
+      line-height: 30px;
+    }
+    .summary .arrow { font-weight: 800; }
+    .summary .up { color: #43d17d; }
+    .summary .down { color: #ff6470; }
+    .summary .neutral { color: #aeb8c6; }
+    .summary .source {
+      color: #7f8b9c;
+      font-size: 12px;
+    }
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      padding: 7px;
+    }
+    .camera {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid #344258;
+      border-radius: 8px;
+      background: #111a27;
+    }
+    .camera iframe {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transform-origin: center;
+      background: #090d13;
+    }
+    .camera .camera-link {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: block;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      cursor: pointer;
+      color: #fff;
+      background: transparent;
+      text-decoration: none;
+    }
+    .camera .camera-link span {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      padding: 5px 10px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      background: rgba(4,8,13,.88);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .camera:hover, .camera:focus-within {
+      border-color: #48b2ff;
+      box-shadow: inset 0 0 0 1px #48b2ff;
+    }
+    .camera .camera-link:focus-visible { outline: 3px solid #48b2ff; outline-offset: -3px; }
+
+    dialog {
+      width: min(96vw, calc((96vh - 48px) * 16 / 9));
+      height: fit-content;
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid #607089;
+      border-radius: 12px;
+      color: #fff;
+      background: #0b111a;
+      box-shadow: 0 28px 90px rgba(0, 0, 0, .75);
+    }
+    dialog::backdrop {
+      background: rgba(36, 39, 44, .82);
+      backdrop-filter: grayscale(1) blur(2px);
+    }
+    .viewer-head {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px 0 16px;
+      border-bottom: 1px solid #344258;
+      background: #101722;
+    }
+    #viewer-title { font-size: 17px; font-weight: 700; }
+    #close-viewer {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      color: #fff;
+      background: #273345;
+      cursor: pointer;
+      font-size: 25px;
+      line-height: 1;
+    }
+    #close-viewer:hover { background: #3b4a60; }
+    #viewer-frame {
+      position: static;
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      background: #090d13;
+      transform: none;
+    }
+    .viewer-stage {
+      position: static;
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      overflow: clip;
+      background: #090d13;
+    }
+    @media (max-width: 1000px) {
+      body { overflow: auto; }
+      header {
+        height: auto;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px;
+      }
+      body { grid-template-rows: auto minmax(0, 1fr); }
+      .summary { width: 100%; flex-wrap: wrap; }
+      .summary a { border-left: 0; padding: 0 10px; }
+      main {
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+        grid-template-rows: none;
+        grid-auto-rows: 220px;
+      }
+    }
+    .visit-counter {
+      position: fixed;
+      right: 7px;
+      bottom: 5px;
+      z-index: 20;
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: rgba(255, 255, 255, .68);
+      background: rgba(8, 13, 21, .72);
+      font-size: 11px;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Камеры ЖК &laquo;Шагал&raquo;</h1>
+    <nav class="summary" aria-label="Информационная строка">
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" title="Погода в Москве — Open-Meteo">
+        <span class="dot" id="weather-dot"></span>
+        <span class="value" id="weather-value">Погода: загрузка…</span>
+      </a>
+      <a href="https://yandex.ru/maps/213/moscow/traffic/" target="_blank" rel="noopener noreferrer" title="Пробки в Москве — открыть Яндекс.Карты">
+        <span class="dot" id="traffic-dot" style="background:#ffd34d"></span>
+        <span class="value" id="traffic-value">Пробки: загрузка…</span>
+      </a>
+      <a href="https://www.cbr.ru/currency_base/daily/" target="_blank" rel="noopener noreferrer" title="Официальные курсы Банка России">
+        <span class="value">$ <span id="usd-value">—</span> <span class="arrow neutral" id="usd-arrow">•</span></span>
+        <span class="value">€ <span id="eur-value">—</span> <span class="arrow neutral" id="eur-arrow">•</span></span>
+        <span class="value">¥ <span id="cny-value">—</span> <span class="arrow neutral" id="cny-arrow">•</span></span>
+      </a>
+      <a href="https://www.moex.com/ru/issue.aspx?board=TQBR&amp;code=ETLN" target="_blank" rel="noopener noreferrer" title="ETLN — данные Московской биржи с задержкой">
+        <span class="value">ЭТАЛОН <span id="etln-value">—</span> ₽ <span class="arrow neutral" id="etln-arrow">•</span></span>
+      </a>
+      <a href="https://www.moex.com/ru/issue.aspx?board=TQBR&amp;code=AFKS" target="_blank" rel="noopener noreferrer" title="AFKS — данные Московской биржи с задержкой">
+        <span class="value">АФК СИСТЕМА <span id="afks-value">—</span> ₽ <span class="arrow neutral" id="afks-arrow">•</span></span>
+      </a>
+      <a href="https://etalongroup.ru/msk/online/" target="_blank" rel="noopener noreferrer" title="Открыть официальный раздел трансляций Группы Эталон">
+        <span class="value">Прямые трансляции ЭТАЛОН</span>
+      </a>
+    </nav>
+  </header>
+  <main id="grid"></main>
+  <div class="visit-counter" title="Всего посещений / посещений за текущий месяц" aria-label="Счётчик посещений">
+    <span id="visits-total">—</span> / <span id="visits-month">—</span>
+  </div>
+
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <div class="viewer-head">
+      <span id="viewer-title">Камера</span>
+      <button id="close-viewer" type="button" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="viewer-stage" id="viewer-stage">
+      <iframe id="viewer-frame" title="Увеличенная камера"></iframe>
+    </div>
+  </dialog>
+
+  <script>
+    const cameras = [4, 12, 17, 18, 19, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37];
+    const grid = document.getElementById('grid');
+    const viewer = document.getElementById('viewer');
+    const viewerFrame = document.getElementById('viewer-frame');
+    const viewerTitle = document.getElementById('viewer-title');
+    const closeViewer = document.getElementById('close-viewer');
+
+    function fluidUrl(url) {
+      return `${url}/?fluid=`;
+    }
+
+    function coverFrame(frame, container) {
+      const containerRatio = container.clientWidth / container.clientHeight;
+      const videoRatio = 16 / 9;
+      if (containerRatio > videoRatio) {
+        frame.style.width = '100%';
+        frame.style.height = `${containerRatio / videoRatio * 100}%`;
+      } else {
+        frame.style.width = `${videoRatio / containerRatio * 100}%`;
+        frame.style.height = '100%';
+      }
+    }
+
+    function openCamera(name, url, useFluid = true) {
+      viewerTitle.textContent = typeof name === 'number' ? `Камера ${name}` : name;
+      viewerFrame.src = useFluid ? fluidUrl(url) : url;
+      viewer.showModal();
+    }
+
+    function closeCamera() {
+      viewer.close();
+      viewerFrame.src = 'about:blank';
+    }
+
+    closeViewer.addEventListener('click', closeCamera);
+    viewer.addEventListener('click', event => {
+      if (event.target === viewer) closeCamera();
+    });
+    viewer.addEventListener('close', () => {
+      viewerFrame.src = 'about:blank';
+    });
+
+    const weatherNames = {
+      0: 'Ясно', 1: 'Преимущественно ясно', 2: 'Переменная облачность',
+      3: 'Пасмурно', 45: 'Туман', 48: 'Туман', 51: 'Морось', 53: 'Морось',
+      55: 'Сильная морось', 56: 'Ледяная морось', 57: 'Ледяная морось',
+      61: 'Небольшой дождь', 63: 'Дождь', 65: 'Сильный дождь',
+      66: 'Ледяной дождь', 67: 'Ледяной дождь', 71: 'Небольшой снег',
+      73: 'Снег', 75: 'Сильный снег', 77: 'Снежные зёрна',
+      80: 'Ливень', 81: 'Ливень', 82: 'Сильный ливень',
+      85: 'Снегопад', 86: 'Сильный снегопад', 95: 'Гроза',
+      96: 'Гроза с градом', 99: 'Сильная гроза'
+    };
+
+    function setArrow(id, change) {
+      const arrow = document.getElementById(id);
+      arrow.textContent = change > 0 ? '↑' : change < 0 ? '↓' : '•';
+      arrow.className = `arrow ${change > 0 ? 'up' : change < 0 ? 'down' : 'neutral'}`;
+    }
+
+    function formatNumber(value, digits = 2) {
+      return Number(value).toLocaleString('ru-RU', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    async function loadWeather() {
+      const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.7558&longitude=37.6176&current=temperature_2m,weather_code&timezone=Europe%2FMoscow', { cache: 'no-store' });
+      if (!response.ok) throw new Error('weather');
+      const data = await response.json();
+      const temperature = Math.round(data.current.temperature_2m);
+      const sign = temperature > 0 ? '+' : '';
+      const condition = weatherNames[data.current.weather_code] || 'Погода в Москве';
+      document.getElementById('weather-value').textContent = `${sign}${temperature}° ${condition}`;
+      document.getElementById('weather-dot').style.background = data.current.weather_code === 0 ? '#f5c84c' : '#55b8ff';
+    }
+
+    async function loadCurrencies() {
+      const response = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', { cache: 'no-store' });
+      if (!response.ok) throw new Error('currency');
+      const data = await response.json();
+      for (const code of ['USD', 'EUR', 'CNY']) {
+        const item = data.Valute[code];
+        const value = item.Value / item.Nominal;
+        const previous = item.Previous / item.Nominal;
+        document.getElementById(`${code.toLowerCase()}-value`).textContent = formatNumber(value);
+        setArrow(`${code.toLowerCase()}-arrow`, value - previous);
+      }
+    }
+
+    async function loadStock(secid, valueId, arrowId) {
+      const url = `https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/${secid}.json?iss.meta=off&iss.only=marketdata&marketdata.columns=LAST,LASTTOPREVPRICE`;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(secid);
+      const data = await response.json();
+      const row = data.marketdata && data.marketdata.data && data.marketdata.data[0];
+      if (!row || row[0] == null) throw new Error(`${secid}-empty`);
+      document.getElementById(valueId).textContent = formatNumber(row[0]);
+      setArrow(arrowId, Number(row[1] || 0));
+    }
+
+    async function trafficText() {
+      const source = 'https://export.yandex.ru/bar/reginfo.xml?region=213';
+      const urls = [source, `https://api.allorigins.win/raw?url=${encodeURIComponent(source)}`];
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: 'no-store' });
+          if (response.ok) return await response.text();
+        } catch (_) {}
+      }
+      throw new Error('traffic');
+    }
+
+    async function loadTraffic() {
+      const xml = new DOMParser().parseFromString(await trafficText(), 'application/xml');
+      const levelNode = xml.querySelector('traffic level, traffic region level');
+      const hintNode = xml.querySelector('traffic hint, traffic region hint');
+      const level = levelNode ? Number(levelNode.textContent) : NaN;
+      if (!Number.isFinite(level)) throw new Error('traffic-empty');
+      const hint = hintNode ? hintNode.textContent.trim() : 'Пробки в Москве';
+      document.getElementById('traffic-value').textContent = `${level} ${level === 1 ? 'балл' : level < 5 ? 'балла' : 'баллов'} ${hint}`;
+      document.getElementById('traffic-dot').style.background = level <= 3 ? '#65d63e' : level <= 6 ? '#ffd34d' : '#ff5252';
+    }
+
+    async function refreshSummary() {
+      const results = await Promise.allSettled([
+        loadWeather(),
+        loadCurrencies(),
+        loadStock('ETLN', 'etln-value', 'etln-arrow'),
+        loadStock('AFKS', 'afks-value', 'afks-arrow'),
+        loadTraffic()
+      ]);
+      if (results[0].status === 'rejected') document.getElementById('weather-value').textContent = 'Погода в Москве';
+      if (results[4].status === 'rejected') {
+        document.getElementById('traffic-value').textContent = 'Пробки: открыть карту';
+        document.getElementById('traffic-dot').style.background = '#ffd34d';
+      }
+    }
+
+    refreshSummary();
+    setInterval(refreshSummary, 5 * 60 * 1000);
+
+    async function updateVisitCounter() {
+      const month = new Date().toISOString().slice(0, 7);
+      const base = 'https://countapi.mileshilliard.com/api/v1/hit/';
+      const [total, monthly] = await Promise.all([
+        fetch(`${base}kamery-shagal-total`, { cache: 'no-store' }).then(r => {
+          if (!r.ok) throw new Error('counter-total');
+          return r.json();
+        }),
+        fetch(`${base}kamery-shagal-${month}`, { cache: 'no-store' }).then(r => {
+          if (!r.ok) throw new Error('counter-month');
+          return r.json();
+        })
+      ]);
+      document.getElementById('visits-total').textContent = Number(total.value || 0).toLocaleString('ru-RU');
+      document.getElementById('visits-month').textContent = Number(monthly.value || 0).toLocaleString('ru-RU');
+    }
+
+    updateVisitCounter().catch(() => {});
+
+    cameras.forEach(number => {
+      const url = `https://webcam.exdesign.ru/zil-${number}`;
+      const card = document.createElement('section');
+      card.className = 'camera';
+
+      const preview = document.createElement('iframe');
+      preview.src = fluidUrl(url);
+      preview.title = `Предпросмотр камеры ${number}`;
+      preview.loading = 'eager';
+
+      const link = document.createElement('a');
+      link.className = 'camera-link';
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.setAttribute('aria-label', `Увеличить камеру ${number}`);
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        openCamera(number, url);
+      });
+
+      const label = document.createElement('span');
+      label.textContent = `Камера ${number}`;
+      link.append(label);
+      card.append(preview, link);
+      grid.append(card);
+      const observer = new ResizeObserver(() => coverFrame(preview, card));
+      observer.observe(card);
+    });
+
+  </script>
+</body>
+</html>
