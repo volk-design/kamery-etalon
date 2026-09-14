@@ -103,6 +103,18 @@
       transform-origin: center;
       background: #090d13;
     }
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      gap: 8px;
+      padding: 28px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 35%, #263a54 0, #152235 42%, #0b111a 100%);
+    }
+    .camera-placeholder strong { font-size: 22px; }
+    .camera-placeholder small { color: #b9c9db; font-size: 13px; }
     .camera .camera-link {
       position: absolute;
       inset: 0;
@@ -432,33 +444,26 @@
     updateVisitCounter().catch(() => {});
 
     cameras.forEach(number => {
-      const url = `https://webcam.exdesign.ru/zil-${number}`;
+      const url = 'https://etalongroup.ru/msk/online/';
       const card = document.createElement('section');
       card.className = 'camera';
 
-      const preview = document.createElement('iframe');
-      preview.src = fluidUrl(url);
-      preview.title = `Предпросмотр камеры ${number}`;
-      preview.loading = 'eager';
+      const preview = document.createElement('div');
+      preview.className = 'camera-placeholder';
+      preview.innerHTML = `<strong>Камера ${number}</strong><small>Открыть официальную трансляцию ЭТАЛОН</small>`;
 
       const link = document.createElement('a');
       link.className = 'camera-link';
       link.href = url;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.setAttribute('aria-label', `Увеличить камеру ${number}`);
-      link.addEventListener('click', event => {
-        event.preventDefault();
-        openCamera(number, url);
-      });
+      link.setAttribute('aria-label', `Открыть официальную трансляцию для камеры ${number}`);
 
       const label = document.createElement('span');
       label.textContent = `Камера ${number}`;
       link.append(label);
       card.append(preview, link);
       grid.append(card);
-      const observer = new ResizeObserver(() => coverFrame(preview, card));
-      observer.observe(card);
     });
 
   </script>
